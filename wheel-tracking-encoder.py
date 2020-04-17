@@ -1,5 +1,5 @@
-# Play a note based on the rate of rotation
-# on wheel 1 (the left one)
+# Make wheel 2 position match wheel 1 position
+# No PID yet.
 
 from microbit import *
 import ustruct
@@ -60,6 +60,22 @@ class tbos:
         pin16.write_digital(1)
         return
 
+    def clearEncoder(i):
+        global buf2
+        if i == 1:
+            buf2[0] = 15
+        elif i == 2:
+            buf2[0] = 25
+        else:
+            return 0  # no such encoder
+
+        buf2[1] = 0
+        pin16.write_digital(0)
+        spi.write(buf2)
+        pin16.write_digital(1)
+        return
+
+
     def getEncoder(i):
         global bufEnc
         if i == 1:
@@ -78,29 +94,14 @@ class tbos:
 spi.init()
 
 ############ Add your code here.##############
-display.show(Image.SILLY)
+display.show(Image.HAPPY)
 sleep(1000)
-dizzy = 0
-
+tbos.clearEncoder(1)
+tbos.clearEncoder(2)
+sleep(100)
 # Spin your TB2 and measure rotation around the z axis
-elast = 0
 while True:
-    sleep(50)
-    enext = tbos.getEncoder(1)
-    ediff = abs(enext-elast)
-    elast = enext
-    if ediff > 5:
-        # Wheeeee :)
-        display.show(Image.HAPPY)
-        tbos.playNote(ediff/250)
-#       tbos.playFrequency(ediff/10)
-        dizzy += 1
-    else:
-        if dizzy > 20 :
-            # I'm dizzy
-            display.show(Image.SILLY)
-            dizzy -= 4
-        else:
-            # Meh, spin me more!
-            display.show(Image.MEH)
-            dizzy = 0
+    e1 = tbos.getEncoder(1)
+    e2 = -tbos.getEncoder(2)
+    ediff = e1-e2
+    tbos.setMotorPower(2, ediff/50)
